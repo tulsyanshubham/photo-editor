@@ -31,7 +31,6 @@ type CropSettings = {
 
 export default function PhotoEditor() {
   const { theme, setTheme } = useTheme();
-  setTheme("dark")
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [filterSettings, setFilterSettings] = useState<FilterSettings>({
     brightness: 100,
