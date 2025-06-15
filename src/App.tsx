@@ -76,31 +76,32 @@ export default function PhotoEditor() {
   }, [originalImage]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const result = event.target?.result;
-    if (typeof result === "string") {
-      setOriginalImage(result);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result;
+      if (typeof result === "string") {
+        setOriginalImage(result);
 
-      // ✅ Reset crop to full image when new image is loaded
-      setCropSettings({
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        aspectRatio: null,
-        isMoving: false,
-        moveStart: { x: 0, y: 0 },
-      });
+        // ✅ Reset crop to full image when new image is loaded
+        setCropSettings({
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          aspectRatio: null,
+          isMoving: false,
+          moveStart: { x: 0, y: 0 },
+        });
 
-      setIsCropping(false); // Optional: reset cropping state
-    }
+
+        setIsCropping(false); // Optional: reset cropping state
+      }
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
   const applyFilters = () => {
     if (!canvasRef.current || !imageRef.current) return;
@@ -119,47 +120,69 @@ export default function PhotoEditor() {
       aspectRatio
     } = cropSettings;
 
-    // Get actual pixel values from percentage
+    // Convert percentage-based crop settings to actual pixel dimensions
     const cropX = img.naturalWidth * (x / 100);
     const cropY = img.naturalHeight * (y / 100);
     const cropW = img.naturalWidth * (width / 100);
     const cropH = img.naturalHeight * (height / 100);
 
-    // Resize canvas to match crop size
+    // Resize the canvas to match cropped image size
     canvas.width = cropW;
     canvas.height = cropH;
 
-    // Apply filters
+    // Construct CSS filter string
+    const sepia = filterSettings.temperature > 0 ? `${filterSettings.temperature}%` : "0%";
+    const warmth = filterSettings.temperature < 0 ? `brightness(${100 + filterSettings.temperature}%)` : "";
+
     ctx.filter = `
     brightness(${filterSettings.brightness}%)
     contrast(${100 + filterSettings.contrast}%)
     saturate(${filterSettings.saturation}%)
-    sepia(${Math.max(0, filterSettings.temperature)}%)
+    sepia(${sepia})
     hue-rotate(${filterSettings.hue}deg)
+    ${warmth}
     ${filterSettings.grayscale ? "grayscale(100%)" : ""}
-  `;
+  `.trim();
+
+    // Apply transparency
     ctx.globalAlpha = filterSettings.transparency / 100;
 
-    // Draw the cropped image to canvas
+    // Draw cropped image with applied filters
     ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-    // Optional: apply blur after drawing
+    // Optionally apply additional blur
     if (filterSettings.blur > 0) {
-      applyQualityBlur(canvas, filterSettings.blur);
+      applyQualityBlur(canvas, filterSettings.blur); // Make sure this is defined
     }
-  };
 
+    // Reset globalAlpha and filter after draw (optional for safety)
+    ctx.globalAlpha = 1.0;
+    ctx.filter = "none";
+  };
 
   function applyQualityBlur(canvas: HTMLCanvasElement, blurAmount: number) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.filter = `blur(${blurAmount}px)`;
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.putImageData(imageData, 0, 0); // This simulates re-drawing with blur filter
-  }
+    // Create an offscreen canvas to hold the original content
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
 
+    const offCtx = offCanvas.getContext("2d");
+    if (!offCtx) return;
+
+    // Copy the current canvas content to the offscreen canvas
+    offCtx.drawImage(canvas, 0, 0);
+
+    // Apply blur filter and redraw from offscreen canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter = `blur(${blurAmount}px)`;
+    ctx.drawImage(offCanvas, 0, 0);
+
+    // Clean up filter
+    ctx.filter = "none";
+  }
 
   const startCrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isCropping || !imageRef.current) return;
@@ -235,30 +258,51 @@ export default function PhotoEditor() {
   };
 
   const applyPresetCrop = (aspectRatio: string) => {
-    const ratioParts = aspectRatio.split("/");
-    const ratio = parseFloat(ratioParts[0]) / parseFloat(ratioParts[1]);
+    if (!imageRef.current) return;
 
-    let width, height;
+    const img = imageRef.current;
+    const imgW = img.naturalWidth;
+    const imgH = img.naturalHeight;
 
-    if (ratio >= 1) {
-      width = 100;
-      height = 100 / ratio;
+    // parse aspect ratio
+    const [wStr, hStr] = aspectRatio.split("/");
+    const targetRatio = parseFloat(wStr) / parseFloat(hStr);
+
+    let cropWpx: number;
+    let cropHpx: number;
+
+    // decide whether to base on image width or height
+    if (imgW / imgH > targetRatio) {
+      // image is wider than target ratio → limit by height
+      cropHpx = imgH;
+      cropWpx = cropHpx * targetRatio;
     } else {
-      height = 100;
-      width = 100 * ratio;
+      // image is taller (or equal) than target ratio → limit by width
+      cropWpx = imgW;
+      cropHpx = cropWpx / targetRatio;
     }
 
-    setCropSettings((prev) => ({
-      ...prev,
+    // convert back to percentages for your cropSettings state
+    const widthPct = (cropWpx / imgW) * 100;
+    const heightPct = (cropHpx / imgH) * 100;
+
+    // center the crop box
+    const xPct = ((imgW - cropWpx) / 2 / imgW) * 100;
+    const yPct = ((imgH - cropHpx) / 2 / imgH) * 100;
+
+    setCropSettings({
+      x: xPct,
+      y: yPct,
+      width: widthPct,
+      height: heightPct,
       aspectRatio,
-      width,
-      height,
-      x: Math.min(prev.x, 100 - width),
-      y: Math.min(prev.y, 100 - height),
       isMoving: false,
-    }));
+      moveStart: { x: 0, y: 0 },
+    });
+
     setIsCropping(true);
   };
+
 
   const resetFilters = () => {
     setFilterSettings({
@@ -335,6 +379,11 @@ export default function PhotoEditor() {
   const toggleDarkMode = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
+  useEffect(() => {
+    if (!isCropping && originalImage) {
+      applyFilters(); // apply crop and filters to canvas
+    }
+  }, [isCropping]);
 
   useEffect(() => {
     if (originalImage) {
@@ -379,7 +428,7 @@ export default function PhotoEditor() {
                   ref={imageRef}
                   src={originalImage}
                   alt="Original"
-                  className="w-fit h-auto absolute opacity-0 user-select-none"
+                  className="max-w-full h-auto opacity-0 absolute"
                 />
                 <canvas
                   ref={canvasRef}
@@ -533,24 +582,11 @@ export default function PhotoEditor() {
                 </DropdownMenu>
                 <Button
                   variant={isCropping ? "default" : "outline"}
-                  onClick={() => {
-                    setIsCropping(!isCropping);
-                    // if (!isCropping) {
-                    //   setCropSettings({
-                    //     x: 0,
-                    //     y: 0,
-                    //     width: 100,
-                    //     height: 100,
-                    //     aspectRatio: null,
-                    //     isMoving: false,
-                    //     moveStart: { x: 0, y: 0 },
-                    //   });
-                    // }
-                  }}
-                  disabled={!isCropping}
+                  onClick={() => setIsCropping(false)}
                 >
                   Finish Crop
                 </Button>
+
               </div>
 
               {isCropping && (
