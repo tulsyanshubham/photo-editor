@@ -374,6 +374,7 @@ export default function PhotoEditor() {
       }, 'image/jpeg', compressionQuality / 100);
     };
     img.src = originalImage;
+    resetFilters();
   };
 
   const toggleDarkMode = () => {
@@ -426,10 +427,20 @@ export default function PhotoEditor() {
               >
                 <img
                   ref={imageRef}
-                  src={originalImage}
+                  src={originalImage!}
                   alt="Original"
-                  className="max-w-full h-auto opacity-0 absolute"
+                  className="max-w-full h-auto absolute opacity-0 select-none"
+                  onLoad={() => {
+                    if (!canvasRef.current || !imageRef.current) return;
+                    const img = imageRef.current;
+                    const canvas = canvasRef.current;
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+
+                    applyFilters();
+                  }}
                 />
+
                 <canvas
                   ref={canvasRef}
                   className="block max-w-full rounded"
@@ -567,27 +578,44 @@ export default function PhotoEditor() {
             </TabsContent>
 
             <TabsContent value="crop" className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={() => applyPresetCrop("1/1")}>
+                    Square (1:1)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("4/3")}>
+                    Standard (4:3)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("16/9")}>
+                    Widescreen (16:9)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("3/4")}>
+                    Portrait (3:4)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("2/3")}>
+                    Classic (2:3)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("9/16")}>
+                    Vertical Video (9:16)
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("5/4")}>
+                    5:4 Ratio
+                  </Button>
+                  <Button variant="outline" onClick={() => applyPresetCrop("21/9")}>
+                    Ultrawide (21:9)
+                  </Button>
+                </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">Preset Sizes</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => applyPresetCrop("1/1")}>Square (1:1)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => applyPresetCrop("4/3")}>Standard (4:3)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => applyPresetCrop("16/9")}>Widescreen (16:9)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => applyPresetCrop("3/4")}>Portrait (3:4)</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
                 <Button
                   variant={isCropping ? "default" : "outline"}
                   onClick={() => setIsCropping(false)}
+                  disabled={!isCropping}
                 >
                   Finish Crop
                 </Button>
-
               </div>
+
+
 
               {isCropping && (
                 <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
