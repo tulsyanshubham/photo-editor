@@ -1,54 +1,63 @@
-# React + TypeScript + Vite
+# 🖼️ React Photo Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fully-featured image editing tool built with React and Tailwind CSS. Allows users to upload, crop, filter, and download images with a clean and responsive UI.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ✅ Image Upload & Preview
+- ✂️ Cropping with:
+  - Freeform selection
+  - Preset aspect ratios (1:1, 4:3, 16:9, 3:4)
+- 🎨 Filter controls:
+  - Brightness
+  - Contrast
+  - Saturation
+  - Temperature
+  - Hue rotation
+  - Grayscale (B&W toggle)
+  - Blur
+  - Transparency
+- 📦 Compression quality control
+- 🌗 Light/Dark mode toggle
+- 📥 Download the edited image
 
-## Expanding the ESLint configuration
+## 🧪 Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React (TypeScript)**
+- **Tailwind CSS**
+- **Canvas API**
+- **ShadCN UI** for sliders, tabs, dropdowns, and buttons
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🧠 How It Works
+
+1. **Upload Image**  
+   Users upload an image file (any format supported by browsers).
+
+2. **Edit Image**  
+   - Filters and crop settings are applied using the `<canvas>` element.
+   - Filters use the `ctx.filter` and `ctx.globalAlpha` properties.
+   - Cropping is calculated using percentage-based dimensions from the natural image size.
+
+3. **Download Image**  
+   - The current canvas (after cropping and filtering) is converted to a Blob and downloaded.
+
+## 🖼️ Cropping Logic
+
+Cropping works by maintaining aspect ratio relative to the original image. The selected crop area is shown as an overlay, and cropping is centered and scaled properly:
+
+```ts
+// Example: Applying 1:1 square crop
+if (imgW / imgH > 1) {
+  cropH = imgH;
+  cropW = cropH; // Square
+} else {
+  cropW = imgW;
+  cropH = cropW; // Square
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 🧩 Future Enhancements
+  - Rotate and flip tools
+  - History/Undo feature
+  - Multi-image batch processing
+  - Drag-to-resize crop box
