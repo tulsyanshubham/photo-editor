@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -117,7 +116,6 @@ export default function PhotoEditor() {
       y,
       width,
       height,
-      aspectRatio
     } = cropSettings;
 
     // Convert percentage-based crop settings to actual pixel dimensions
