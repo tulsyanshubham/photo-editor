@@ -301,7 +301,6 @@ export default function PhotoEditor() {
     setIsCropping(true);
   };
 
-
   const resetFilters = () => {
     setFilterSettings({
       brightness: 100,
@@ -393,7 +392,7 @@ export default function PhotoEditor() {
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold dark:text-white">Photo Editor</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Sajin </h1>
         <Button variant="outline" size="icon" onClick={toggleDarkMode}>
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
