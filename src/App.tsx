@@ -432,7 +432,7 @@ export default function PhotoEditor() {
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold dark:text-white">Sajin Editor</h1>
-        <div className="flex items-centre gap-8 ml-auto mr-3">
+        <div className="flex items-centre gap-8 ml-auto mr-6">
           <img
             src={logo}
             alt="SLISC Logo"
