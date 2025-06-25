@@ -448,17 +448,6 @@ export default function PhotoEditor() {
         <div className="flex-1">
           <div className="border rounded-lg overflow-hidden relative dark:border-gray-700">
             {!originalImage ? (
-              // <div className="flex items-center justify-center h-96 bg-gray-100 dark:bg-gray-800">
-              //   <label className="cursor-pointer p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
-              //     Upload Photo
-              //     <input
-              //       type="file"
-              //       accept="image/*"
-              //       className="hidden"
-              //       onChange={handleImageUpload}
-              //     />
-              //   </label>
-              // </div>
               <div
                 className={`flex items-center justify-center h-96 transition-colors ${isDragOver
                   ? 'bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-500 dark:border-blue-400'
