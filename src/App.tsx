@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Upload as UploadIcon } from 'lucide-react';  // Add this with other icon imports
+import { Upload as UploadIcon } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 type FilterSettings = {
   brightness: number;
@@ -431,6 +432,13 @@ export default function PhotoEditor() {
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold dark:text-white">Sajin Editor</h1>
+        <div className="flex items-centre gap-8 ml-auto mr-3">
+          <img
+            src={logo}
+            alt="SLISC Logo"
+            className="h-10 w-75"
+          />
+        </div>
         <Button variant="outline" size="icon" onClick={toggleDarkMode}>
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
