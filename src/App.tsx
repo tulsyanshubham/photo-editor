@@ -436,7 +436,7 @@ export default function PhotoEditor() {
           <img
             src={logo}
             alt="SLISC Logo"
-            className="h-10 w-75"
+            className="h-10 w-75 dark:brightness-150"
           />
         </div>
         <Button variant="outline" size="icon" onClick={toggleDarkMode}>
