@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Upload as UploadIcon } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 type FilterSettings = {
   brightness: number;
@@ -50,6 +52,7 @@ export default function PhotoEditor() {
     isMoving: false,
     moveStart: { x: 0, y: 0 },
   });
+  const [isDragOver, setIsDragOver] = useState(false);  // Add this with other state declarations
   const [isCropping, setIsCropping] = useState(false);
   const [cropStart, setCropStart] = useState({ x: 0, y: 0 });
   const [compressionQuality, setCompressionQuality] = useState(100);
@@ -97,6 +100,42 @@ export default function PhotoEditor() {
 
 
         setIsCropping(false); // Optional: reset cropping state
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.match('image.*')) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result;
+      if (typeof result === "string") {
+        setOriginalImage(result);
+        // Reset crop settings (same as in handleImageUpload)
+        setCropSettings({
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          aspectRatio: null,
+          isMoving: false,
+          moveStart: { x: 0, y: 0 },
+        });
+        setIsCropping(false);
       }
     };
     reader.readAsDataURL(file);
@@ -301,7 +340,6 @@ export default function PhotoEditor() {
     setIsCropping(true);
   };
 
-
   const resetFilters = () => {
     setFilterSettings({
       brightness: 100,
@@ -393,7 +431,14 @@ export default function PhotoEditor() {
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold dark:text-white">Photo Editor</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Sajin Editor</h1>
+        <div className="flex items-centre gap-8 ml-auto mr-6">
+          <img
+            src={logo}
+            alt="SLISC Logo"
+            className="h-10 w-75"
+          />
+        </div>
         <Button variant="outline" size="icon" onClick={toggleDarkMode}>
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
@@ -403,9 +448,28 @@ export default function PhotoEditor() {
         <div className="flex-1">
           <div className="border rounded-lg overflow-hidden relative dark:border-gray-700">
             {!originalImage ? (
-              <div className="flex items-center justify-center h-96 bg-gray-100 dark:bg-gray-800">
-                <label className="cursor-pointer p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
-                  Upload Photo
+              <div
+                className={`flex items-center justify-center h-96 transition-colors ${isDragOver
+                  ? 'bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-500 dark:border-blue-400'
+                  : 'bg-gray-100 dark:bg-gray-800'
+                  }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <label className="cursor-pointer p-8 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <UploadIcon className="h-12 w-12 text-gray-500 dark:text-gray-400" />
+                    <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                      Drag & Drop your photo here
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      or
+                    </span>
+                    <span className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                      Browse Files
+                    </span>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
